@@ -1,19 +1,21 @@
-# installs and configs nginx server
+# Automating project requirements using Puppet
 
 package { 'nginx':
-  ensure => 'installed',
+  ensure => installed,
 }
 
-file { 'index.nginx-debian.html':
-  path    => '/var/www/html/index.nginx-debian.html',
+file_line { 'install':
+  ensure => 'present',
+  path   => '/etc/nginx/sites-enabled/default',
+  after  => 'listen 80 default_server;',
+  line   => 'rewrite ^/redirect_me https://www.github.com/FrancaIcey permanent;',
+}
+
+file { '/var/www/html/index.html':
   content => 'Hello World!',
 }
 
-exec { 'config':
-  command  => 'sed -i "s/server_name _;/server_name _;\n\trewrite ^\/redirect_me https://github.com/FrancaIcey permanent;/" /etc/nginx/sites-available/default',
-  provider => 'shell',
-}
-exec { 'start':
-  command  => 'sudo service nginx restart',
-  provider => 'shell',
+service { 'nginx':
+  ensure  => running,
+  require => Package['nginx'],
 }
